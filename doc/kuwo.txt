@@ -1,0 +1,5 @@
+歌曲搜索列表：
+http://search.kuwo.cn/r.s?all=周杰伦&ft=music&itemset=web_2013&client=kt&pn=0&rn=5&rformat=json&encoding=utf8
+
+歌曲信息详情：
+http://antiserver.kuwo.cn/anti.s?type=convert_url&rid=MUSIC_324244&format=aac|mp3&response=url

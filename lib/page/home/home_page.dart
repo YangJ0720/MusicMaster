@@ -4,6 +4,7 @@ import 'package:music/data/qq_data.dart';
 import 'package:music/page/home/drawer/home_drawer.dart';
 import 'package:music/page/home/tab/home_tab_view.dart';
 import 'package:music/page/search/search_page.dart';
+import 'package:music/widget/music_play_view.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -54,15 +55,27 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         ),
         bottom: TabBar(tabs: _tabs, controller: _controller),
       ),
-      body: TabBarView(
+      body: Stack(
         children: [
-          HomeTabView(QQData()),
-          HomeTabView(QQData()),
-          HomeTabView(QQData()),
-          HomeTabView(KGData()),
-          HomeTabView(QQData()),
+          Positioned.fill(
+            child: TabBarView(
+              children: [
+                HomeTabView(QQData()),
+                HomeTabView(QQData()),
+                HomeTabView(QQData()),
+                HomeTabView(KGData()),
+                HomeTabView(QQData()),
+              ],
+              controller: _controller,
+            ),
+          ),
+          const Positioned(
+            child: MusicPlayView(),
+            left: 20,
+            right: 20,
+            bottom: 20,
+          ),
         ],
-        controller: _controller,
       ),
       drawer: const HomeDrawer(),
     );

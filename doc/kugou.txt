@@ -1,0 +1,9 @@
+酷狗接口文档
+https://m3ws.kugou.com/search/index
+
+歌曲搜索列表：
+https://mobiles.kugou.com/api/v3/search/song?format=jsonp&keyword=%E7%88%B1%E6%88%91%E5%88%AB%E8%B5%B0&page=1&pagesize=30&showtype=1&callback=kgJSONP523456573
+
+歌曲信息详情：
+https://m.kugou.com/app/i/getSongInfo.php?cmd=playInfo&hash=691FCB7341069E8B667E1305092B0F8D
+https://m3ws.kugou.com/v1/song/info?srcappid=2919&clientver=1000&clienttime=1673919541683&mid=62133b9ce83ff37730e3378d1c9e8ea5&uuid=62133b9ce83ff37730e3378d1c9e8ea5&dfid=34dHN50F3ElW2VEIdD2siYbm&appid=1058&token=&version=1000&uid=0&hash=EDE9BA86AA3F2D6BE493AB2A11D4796C&album_id=939265&album_audio_id=38167864&platid=4&from=mkugou&signature=ac45e062252429f67891d91f2c95160a

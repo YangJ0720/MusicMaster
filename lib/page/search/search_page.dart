@@ -1,5 +1,12 @@
-import 'package:dio/dio.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:music/db/dao/music_dao.dart';
+import 'package:music/model/kg_music_parser.dart';
+import 'package:music/model/music_model.dart';
+import 'package:music/network/api/api_base_kg.dart';
+import 'package:music/network/http_client.dart';
+import 'package:music/utils/music_platform_utils.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({Key? key}) : super(key: key);
@@ -9,42 +16,36 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
+  final GlobalKey<RefreshIndicatorState> _key = GlobalKey();
+  final StreamController<List<MusicModel>> _streamC = StreamController();
   final TextEditingController _controller = TextEditingController();
 
-  /// 加载数据
-  Future<void> _loadData(String text) async {
-    var url = 'http://msearchcdn.kugou.com/';
-    var base = BaseOptions(baseUrl: url);
-    var dio = Dio(base);
-    var sb = StringBuffer();
-    sb.write('api/v3/search/song?showtype=14&highlight=em');
-    sb.write('&pagesize=30&tag_aggr=1&tagtype=全部&plat=0&sver=5');
-    sb.write('&keyword=$text&correct=1&api_ver=1&version=9108&page=1');
-    sb.write('&area_code=1&tag=1&with_res_tag=1');
-    var path = sb.toString();
-    var response = await dio.get<String>(path);
-    debugPrint('response = $response');
-    var code = response.statusCode;
-    if (code == 200) {
-      var responseData = response.data;
-      if (responseData == null) return;
-      var s = '<!--KG_TAG_RES_START-->';
-      var e = '<!--KG_TAG_RES_END-->';
-      // 去除头部标识
-      if (responseData.startsWith(s)) {
-        responseData = responseData.substring(s.length);
-      }
-      // 去除尾部标识
-      if (responseData.endsWith(e)) {
-        var length = responseData.length;
-        responseData = responseData.substring(0, length - e.length);
-      }
-      debugPrint('responseData = $responseData');
-    }
+  /// 下拉刷新
+  Future<void> onRefresh() async {
+    var keyword = _controller.text;
+    var list = await ApiBaseKg().search(keyword);
+    if (list == null) return;
+    _streamC.sink.add(list);
+  }
+
+  Widget _createPlatformView(int platform) {
+    return Container(
+      child: Text(
+        MusicPlatformUtils.platformToString(platform),
+        style: const TextStyle(color: Colors.white, fontSize: 8),
+      ),
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(0.5)),
+        color: Colors.blue,
+      ),
+      margin: const EdgeInsets.symmetric(horizontal: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 5),
+    );
   }
 
   @override
   void dispose() {
+    _streamC.close();
     _controller.dispose();
     super.dispose();
   }
@@ -59,16 +60,53 @@ class _SearchPageState extends State<SearchPage> {
         ),
         actions: [
           IconButton(
-            onPressed: () => _loadData(_controller.text),
+            onPressed: () => _key.currentState?.show(),
             icon: const Icon(Icons.search),
           ),
         ],
       ),
-      body: ListView.builder(
-        itemBuilder: (_, index) {
-          return ListTile(title: Text(index.toString()));
-        },
-        itemCount: 100,
+      body: RefreshIndicator(
+        key: _key,
+        child: StreamBuilder<List<MusicModel>>(
+          builder: (_, snapshot) {
+            var list = snapshot.requireData;
+            return ListView.separated(
+              itemBuilder: (_, index) {
+                var item = list[index];
+                var platform = item.platform;
+                return InkWell(
+                  child: Container(
+                    child: Row(
+                      children: [
+                        _createPlatformView(platform),
+                        Column(
+                          children: [
+                            Text(item.songName, maxLines: 1),
+                            Text(item.singerName),
+                          ],
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                        ),
+                      ],
+                      mainAxisSize: MainAxisSize.min,
+                    ),
+                    decoration: const BoxDecoration(),
+                  ),
+                  onTap: () {
+                    var map = item.toMap();
+                    if (map == null) return;
+                    MusicDao.build(platform)?.insert(map);
+                  },
+                );
+              },
+              separatorBuilder: (_, index) => const Divider(),
+              itemCount: list.length,
+            );
+          },
+          stream: _streamC.stream,
+          initialData: const [],
+        ),
+        onRefresh: onRefresh,
       ),
     );
   }
